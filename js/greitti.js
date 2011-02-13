@@ -27,7 +27,7 @@ var Greitti = function() {
 
     var strokeColor = {
        1: "#193695",    // Helsinki internal bus lines
-       2: "#ff0000",    // trams
+       2: "#00FF00",    // trams
        3: "#193695",    // Espoo internal bus lines
        4: "#193695",    // Vantaa internal bus lines
        5: "#193695",    // regional bus lines
@@ -51,11 +51,12 @@ var Greitti = function() {
      * current point information
      *
      */
-    var registerMarker = function(marker, loc) {
+    var registerMarker = function(marker, loc, legData) {
         google.maps.event.addListener(marker, 'mouseover', function() {
             var info = document.getElementById('info');
+
             if ( loc ) {
-                info.innerHTML = loc.arrTime + " " + loc.name;
+                info.innerHTML = "<p>" + loc.arrTime + " " + loc.name + "</p>";
             } else {
                 info.innerHTML = null;
             }
@@ -71,7 +72,9 @@ var Greitti = function() {
 
             circle.bindTo('center', marker, 'position');
 
-            console.log(loc);
+            if ( legData ) {
+                info.innerHTML += "<p>" + legData.code + "</p>";
+            }
         });
     }
 
@@ -89,6 +92,7 @@ var Greitti = function() {
             zIndex: 4,
             icon: start
         });
+
         registerMarker(markerS);
 
         markerE = new google.maps.Marker({
@@ -98,6 +102,7 @@ var Greitti = function() {
             zIndex: 4,
             icon: end
         });
+
         registerMarker(markerE);
 
         var legs = data[0].legs;
@@ -117,8 +122,8 @@ var Greitti = function() {
          */
 
         // plot each location
-        // first one has special tretment (bigger icon)
-        plotLoc(leg.locs.shift(), 1);
+        // first one has special tretment (bigger icon and extra info)
+        plotLoc(leg.locs.shift(), leg);
 
         for ( var i = 0; i < leg.locs.length; i++ ) {
             plotLoc(leg.locs[i]);
@@ -138,7 +143,7 @@ var Greitti = function() {
         coords = [];
     };
 
-    var plotLoc = function(loc, isFirst) {
+    var plotLoc = function(loc, legData) {
         /*
          * arrTime
          * coord [x,y]
@@ -150,11 +155,12 @@ var Greitti = function() {
         coords.push(latlng);
 
         if ( loc.name ) {
-            if (isFirst) {
+            if (legData) {
                 marker = new google.maps.Marker({
                     position: latlng,
                     map: map,
                 });
+                registerMarker(marker, loc, legData);
             } else {
                 marker = new google.maps.Marker({
                     position: latlng,
@@ -162,9 +168,8 @@ var Greitti = function() {
                     zIndex: 4,
                     icon: "http://labs.google.com/ridefinder/images/mm_20_red.png"
                 });
-
+                registerMarker(marker, loc);
             }
-            registerMarker(marker, loc);
         }
 
     };
