@@ -51,14 +51,22 @@ var Greitti = function() {
      * current point information
      *
      */
-    var registerMarker = function(marker, loc, legData) {
+    var registerMarker = function(marker, data) {
         google.maps.event.addListener(marker, 'mouseover', function() {
+
             var info = document.getElementById('info');
 
-            if ( loc ) {
-                info.innerHTML = "<p>" + loc.arrTime + " " + loc.name + "</p>";
-            } else {
-                info.innerHTML = null;
+            if ( data.legs ) {
+                info.innerHTML = "<p>duration: " + data.legs.duration + "</p>";
+                info.innerHTML += "<p>type: " + data.legs.type + "</p>";
+                info.innerHTML += "<p>length: " + data.legs.length + "</p>";
+                if ( data.legs.code ) {
+                    info.innerHTML += "<p>code: " + data.legs.code + "</p>";
+                }
+            }
+            if ( data.loc ) {
+                info.innerHTML = "<p>departure time: " + data.loc.depTime + "</p>";
+                info.innerHTML += "<p>name: " + data.loc.name + "</p>";
             }
 
             if ( circle && circle.getMap() ) {
@@ -72,41 +80,25 @@ var Greitti = function() {
 
             circle.bindTo('center', marker, 'position');
 
-            if ( legData ) {
-                info.innerHTML += "<p>" + legData.code + "</p>";
-            }
         });
     }
 
     var iterateLegs = function(data) {
 
-        // First and last markers are somewhat special. They have special treatment 
-        var firstPlace = data[0].legs[0].locs[0].coord;
-        var lastPlaceLegs = data[0].legs[data[0].legs.length -1];
-        var lastPlace = lastPlaceLegs.locs[lastPlaceLegs.locs.length -1].coord;
-
-        markerS = new google.maps.Marker({
-            position: new google.maps.LatLng(firstPlace.y, firstPlace.x),
-            map: map,
-            title: "start",
-            zIndex: 4,
-            icon: start
-        });
-
-        registerMarker(markerS);
-
-        markerE = new google.maps.Marker({
-            position: new google.maps.LatLng(lastPlace.y, lastPlace.x),
-            map: map,
-            title: "end",
-            zIndex: 4,
-            icon: end
-        });
-
-        registerMarker(markerE);
-
         var legs = data[0].legs;
         for ( var i = 0; i < legs.length; i++ ) {
+            var latlng = new google.maps.LatLng(legs[i].locs[0].coord.y, legs[i].locs[0].coord.x);
+
+            marker = new google.maps.Marker({
+                position: latlng,
+                map: map,
+                title: "foo",
+                zIndex: 4
+            });
+
+            coords.push(latlng);
+
+            registerMarker(marker, { legs: legs[i] } );
             parseLeg(legs[i]);
         }
     };
@@ -121,13 +113,15 @@ var Greitti = function() {
          *
          */
 
-        // plot each location
-        // first one has special tretment (bigger icon and extra info)
-        plotLoc(leg.locs.shift(), leg);
-
-        for ( var i = 0; i < leg.locs.length; i++ ) {
+        // First one has been already plotted (big icon) so it can be discarded
+        // Also forget the last one intentionally because it will be plotted later
+        leg.locs.shift();
+        for ( var i = 0; i < leg.locs.length - 1 ; i++ ) {
             plotLoc(leg.locs[i]);
         }
+
+        // Last one to be processed
+        addToCoords(leg.locs.pop());
 
         // Red default
         var color = ( strokeColor[leg.type] ) ? strokeColor[leg.type] : "#FF0000";
@@ -143,7 +137,12 @@ var Greitti = function() {
         coords = [];
     };
 
-    var plotLoc = function(loc, legData) {
+    var addToCoords = function(loc) {
+        var latlng = new google.maps.LatLng(loc.coord.y, loc.coord.x);
+        coords.push(latlng);
+    }
+
+    var plotLoc = function(loc) {
         /*
          * arrTime
          * coord [x,y]
@@ -152,32 +151,20 @@ var Greitti = function() {
          */
         var latlng = new google.maps.LatLng(loc.coord.y, loc.coord.x);
 
-        coords.push(latlng);
-
         if ( loc.name ) {
-            if (legData) {
-                marker = new google.maps.Marker({
-                    position: latlng,
-                    map: map,
-                });
-                registerMarker(marker, loc, legData);
-            } else {
-                marker = new google.maps.Marker({
-                    position: latlng,
-                    map: map,
-                    zIndex: 4,
-                    icon: "http://labs.google.com/ridefinder/images/mm_20_red.png"
-                });
-                registerMarker(marker, loc);
-            }
+            marker = new google.maps.Marker({
+                position: latlng,
+                map: map,
+                zIndex: 4,
+                icon: "http://labs.google.com/ridefinder/images/mm_20_red.png"
+            });
+            registerMarker(marker, { loc: loc });
         }
-
+        coords.push(latlng);
     };
-
 
     // Public interface//{{{
     return {
-        foo: "bar",
         initialize: function() {
             map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
             // TODO Just get the first one
