@@ -1,7 +1,8 @@
-// Run it as node greitt-server.js username password
+// Run as "node greitt-server.js username password"
 
 var http = require('http');
 var sys = require("sys");
+var fs = require("fs");
 var querystring = require("querystring");
 
 if ( !process.argv[2] || !process.argv[3] ) {
@@ -21,41 +22,51 @@ http.createServer(function(request, response) {
     var queryParams = querystring.parse(request.url.substring(index));
     console.log(queryParams);
 
-    if ( request.url == "/route" ) {
-        /*//{{{
-        var conn = http.createClient(hslClient.port, hslClient.host);
-        var request = conn.request("GET", hslClient.path, { "Host": "api.reittiopas.fi" });
-
-        var data = "";
-        request.addListener("response", function(response) {
-            response.addListener("data", function(chunk) {
-                data += chunk;
-            });
-            response.addListener("end", function(chunk) {
-                console.log("end");
-                res.end(JSON.stringify(data));
-            });
+    // Serve the js file
+    if ( request.url == "/gr") {
+        fs.readFile("greitti.js", function(err,data) {
+            if ( err ) {
+                next (err);
+                return;
+            }
+            response.writeHead(200, {'Content-Type': 'text/javascript'});
+            response.write(data);
+            response.end();
         });
-        request.end();
-        *///}}}
+    } else if ( request.url.match('^/route') ) {
+        // Fetches data from HSL api and return as json
+        hslClient.path = '/hsl/prod/?request=route&user=' + process.argv[2] + '&pass=' + process.argv[3] + '&show=1&epsg_in=4326&epsg_out=4326&from=' + queryParams.lon + ',' + queryParams.lat + '&to=24.9523007869,60.169102414777';
         var hslReq = http.request(hslClient, function(res) {
+            console.log(hslClient.path);
             res.setEncoding("utf8");
             var data = "";
 
             res.on("data", function(chunk) {
                 data += chunk;
             }).on("end", function() {
-                response.end(data);
+                console.log(data);
+                response.writeHead(200, {'Content-Type': 'text/plain'});
+                response.write(data);
+                response.end();
             });
 
         }).on("error", function(e) {
             console.log("Request error");
         });
         hslReq.end();
-    } else {
-        response.end("Nothing to see here");
-    }
 
+    } else {
+        // Serve the index page
+        fs.readFile("../index.html", function(err,data) {
+            if ( err ) {
+                next (err);
+                return;
+            }
+            response.writeHead(200, {'Content-Type': 'text/html'});
+            response.write(data);
+            response.end();
+        });
+    }
 }).listen(8080, "127.0.0.1");
 
-console.log("Server running at 127.0.0.1");
+console.log("Server running at 127.0.0.1:8080");
