@@ -75,7 +75,7 @@ var Greitti = function() {
 
             circle = new google.maps.Circle({
                 map: map,
-                radius: 100
+                radius: 50
             });
 
             circle.bindTo('center', marker, 'position');
@@ -163,10 +163,47 @@ var Greitti = function() {
         coords.push(latlng);
     };
 
+    var createXHR = function() {
+        var request = false;
+        request = new XMLHttpRequest();
+        return request;
+    }
+
     // Public interface//{{{
     return {
         initialize: function() {
             map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+
+            // Click listener
+            google.maps.event.addListener(map, "click", function(mEvent) {
+
+                // Add the latest marker (end of route)
+                var latlng = new google.maps.LatLng("60.16281419297092", "24.940303266001365");
+                franticMarker = new google.maps.Marker({
+                    position: latlng,
+                    map: map,
+                    zIndex:4,
+                    icon: "http://labs.google.com/ridefinder/images/mm_20_black.png"
+                });
+
+                /*
+                var xhr=createXHR();
+                xhr.open("GET", "/route?lat=" + mEvent.latLng.lat() + "&lon=" + mEvent.latLng.lng(), true);
+                xhr.onreadystatechange=function() {
+                    if (xhr.readyState == 4) {
+                        if (xhr.status != 404) {
+                            var myjson = JSON.parse(xhr.responseText);
+                            console.log(myjson[0]);
+                            iterateLegs(myjson[0]);
+                        } else {
+                            console.log("nothing to see here");
+                        }
+                    }
+                }
+                xhr.send(null);
+                */
+            });
+
             // TODO Just get the first one
             iterateLegs(response[0]);
         }
