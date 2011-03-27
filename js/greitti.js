@@ -12,6 +12,14 @@ var Greitti = function() {
 
     var map;
     var coords = [];
+
+    var allMarkers = [];
+    var allPaths = [];
+
+    // I spend a lot of time in these coordinates (that's Frantic, not DTM =))
+    var fLatLng = new google.maps.LatLng("60.16281419297092", "24.940303266001365");
+    var fMarker = null;
+
     var circle;
 
     var start = "http://www.google.com/mapfiles/dd-start.png";
@@ -52,6 +60,9 @@ var Greitti = function() {
      *
      */
     var registerMarker = function(marker, data) {
+        allMarkers.push(marker);
+        //TODO parsing info properly
+
         google.maps.event.addListener(marker, 'mouseover', function() {
 
             var info = document.getElementById('info');
@@ -81,9 +92,27 @@ var Greitti = function() {
             circle.bindTo('center', marker, 'position');
 
         });
-    }
+    };
+
+    var deleteMarkers = function() {
+        if ( allPaths ) {
+            for ( i in allPaths ) {
+                allPaths[i].setMap(null);
+            }
+            // Clear all the paths we currently have
+            allPaths = [];
+        }
+
+        if ( allMarkers ) {
+            for ( i in allMarkers ) {
+                allMarkers[i].setMap(null);
+            }
+            allMarkers = [];
+        }
+    };
 
     var iterateLegs = function(data) {
+        deleteMarkers();
 
         var legs = data[0].legs;
         for ( var i = 0; i < legs.length; i++ ) {
@@ -100,6 +129,12 @@ var Greitti = function() {
 
             registerMarker(marker, { legs: legs[i] } );
             parseLeg(legs[i]);
+        }
+
+        if ( allPaths ) {
+            for ( i in allPaths ) {
+                allPaths[i].setMap(map);
+            }
         }
     };
 
@@ -132,11 +167,13 @@ var Greitti = function() {
             strokeWeight: 2,
             path: coords
         });
+        allPaths.push(path);
 
-        path.setMap(map);
         coords = [];
     };
 
+    // We just need the position. We do not need to plot the last marker as we
+    // will get it in the next leg
     var addToCoords = function(loc) {
         var latlng = new google.maps.LatLng(loc.coord.y, loc.coord.x);
         coords.push(latlng);
@@ -178,22 +215,27 @@ var Greitti = function() {
             google.maps.event.addListener(map, "click", function(mEvent) {
 
                 // Add the latest marker (end of route)
-                var latlng = new google.maps.LatLng("60.16281419297092", "24.940303266001365");
-                franticMarker = new google.maps.Marker({
-                    position: latlng,
-                    map: map,
-                    zIndex:4,
-                    icon: "http://labs.google.com/ridefinder/images/mm_20_black.png"
-                });
+                if ( !fMarker ) {
+                    fMarker = new google.maps.Marker({
+                        position: fLatLng,
+                        map: map,
+                        zIndex:4,
+                        icon: "http://labs.google.com/ridefinder/images/mm_20_black.png"
+                    });
+                }
 
-                /*
-                var xhr=createXHR();
+                var xhr = createXHR();
                 xhr.open("GET", "/route?lat=" + mEvent.latLng.lat() + "&lon=" + mEvent.latLng.lng(), true);
                 xhr.onreadystatechange=function() {
                     if (xhr.readyState == 4) {
                         if (xhr.status != 404) {
+                            if ( xhr.responseText == "" ) {
+                                alert("You are pretty lost, baby!");
+                                return false;
+                            }
                             var myjson = JSON.parse(xhr.responseText);
                             console.log(myjson[0]);
+                            // TODO only first result is parsed at the moment
                             iterateLegs(myjson[0]);
                         } else {
                             console.log("nothing to see here");
@@ -201,11 +243,7 @@ var Greitti = function() {
                     }
                 }
                 xhr.send(null);
-                */
             });
-
-            // TODO Just get the first one
-            iterateLegs(response[0]);
         }
 
     };//}}}

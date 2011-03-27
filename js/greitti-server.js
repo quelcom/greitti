@@ -35,7 +35,7 @@ http.createServer(function(request, response) {
         });
     } else if ( request.url.match('^/route') ) {
         // Fetches data from HSL api and return as json
-        hslClient.path = '/hsl/prod/?request=route&user=' + process.argv[2] + '&pass=' + process.argv[3] + '&show=1&epsg_in=4326&epsg_out=4326&from=' + queryParams.lon + ',' + queryParams.lat + '&to=24.9523007869,60.169102414777';
+        hslClient.path = '/hsl/prod/?request=route&user=' + process.argv[2] + '&pass=' + process.argv[3] + '&show=1&epsg_in=4326&epsg_out=4326&from=' + queryParams.lon + ',' + queryParams.lat + '&to=24.940303266001365,60.16281419297092';
         var hslReq = http.request(hslClient, function(res) {
             console.log(hslClient.path);
             res.setEncoding("utf8");
