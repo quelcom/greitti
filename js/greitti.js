@@ -53,6 +53,36 @@ var Greitti = function() {
        walk: "#443300"  // walking
     };
 
+    var transportTypes = {
+        1: "Bus",
+        2: "Tram",
+        5: "Bus",
+        12: "Train",
+        walk: "Walk"
+    };
+
+    var depTimeParser = function(depTime) {
+        return depTime.substr(8,2) + ':' + depTime.substr(10,2);
+    };
+
+    var codeParser = function(code, type) {
+        var res = typeParser(type);
+        res += ' ' + code.substr(1,3);
+
+        if (code.substr(0) == "2") {
+            res += ' (two zones)';
+        }
+
+        return res;
+    }
+
+    var typeParser = function(type) {
+        if ( transportTypes[type] ) {
+            return transportTypes[type];
+        }
+        return "[unknown type]: " + type;
+    }
+
     /*
      * Register and event listener
      * to include information of the
@@ -61,25 +91,27 @@ var Greitti = function() {
      */
     var registerMarker = function(marker, data) {
         allMarkers.push(marker);
-        //TODO parsing info properly
 
         google.maps.event.addListener(marker, 'mouseover', function() {
 
             var info = document.getElementById('info');
 
             if ( data.legs ) {
-                info.innerHTML = "<p>duration: " + data.legs.duration + "</p>";
-                info.innerHTML += "<p>type: " + data.legs.type + "</p>";
-                info.innerHTML += "<p>length: " + data.legs.length + "</p>";
+                info.innerHTML = "<p>Duration: " + data.legs.duration + "</p>";
+                info.innerHTML += "<p>Length: " + data.legs.length + "m.</p>";
+
                 if ( data.legs.code ) {
-                    info.innerHTML += "<p>code: " + data.legs.code + "</p>";
+                    info.innerHTML += "<p>Code: " + codeParser(data.legs.code, data.legs.type) + "</p>";
+                } else {
+                    info.innerHTML += "<p>Type: " + typeParser(data.legs.type) + "</p>";
                 }
             }
-            if ( data.loc ) {
-                info.innerHTML = "<p>departure time: " + data.loc.depTime + "</p>";
-                info.innerHTML += "<p>name: " + data.loc.name + "</p>";
+            else if ( data.loc ) {
+                info.innerHTML = "<p>Departure time: " + depTimeParser(data.loc.depTime) + "</p>";
+                info.innerHTML += "<p>Name: " + data.loc.name + "</p>";
             }
 
+            // Small surrounding circle when mouseovering on a marker
             if ( circle && circle.getMap() ) {
                 circle.setMap(null);
             }
@@ -94,12 +126,15 @@ var Greitti = function() {
         });
     };
 
+    /*
+     * Clear all markers and polylines
+     * we have before plotting a new and fresh route
+     */
     var deleteMarkers = function() {
         if ( allPaths ) {
             for ( i in allPaths ) {
                 allPaths[i].setMap(null);
             }
-            // Clear all the paths we currently have
             allPaths = [];
         }
 
@@ -220,7 +255,7 @@ var Greitti = function() {
                         position: fLatLng,
                         map: map,
                         zIndex:4,
-                        icon: "http://labs.google.com/ridefinder/images/mm_20_black.png"
+                        icon: "http://www.frantic.com/favicon.ico"
                     });
                 }
 
@@ -234,7 +269,7 @@ var Greitti = function() {
                                 return false;
                             }
                             var myjson = JSON.parse(xhr.responseText);
-                            console.log(myjson[0]);
+                            //console.log(myjson[0]);
                             // TODO only first result is parsed at the moment
                             iterateLegs(myjson[0]);
                         } else {
