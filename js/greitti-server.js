@@ -62,8 +62,7 @@ http.createServer(function(request, response) {
             console.log("Request error");
         });
         hslReq.end();
-
-    } else {
+    } else if ( request.url == "/" ) {
         // Serve the index page
         fs.readFile("../index.html", function(err,data) {
             if ( err ) {
@@ -74,7 +73,12 @@ http.createServer(function(request, response) {
             response.write(data);
             response.end();
         });
+    } else {
+            response.writeHead(200, {'Content-Type': 'text/html'});
+            response.write("Nothing to see here");
+            response.end();
     }
+
 }).listen(8080, "127.0.0.1");
 
 console.log("Server running at 127.0.0.1:8080");
