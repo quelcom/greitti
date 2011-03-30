@@ -254,7 +254,11 @@ var Greitti = function() {
                 }
 
                 var xhr = createXHR();
-                xhr.open("GET", "/route?lat=" + mEvent.latLng.lat() + "&lon=" + mEvent.latLng.lng(), true);
+                xhr.open("GET", "/route?lat=" + mEvent.latLng.lat() + 
+                    "&lon=" + mEvent.latLng.lng() + 
+                    "&destLon=24.940303266001365" + 
+                    "&destLat=60.16281419297092"
+                    , true);
                 xhr.onreadystatechange=function() {
                     if (xhr.readyState == 4) {
                         if (xhr.status != 404) {

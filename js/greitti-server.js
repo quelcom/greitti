@@ -5,6 +5,11 @@ var sys = require("sys");
 var fs = require("fs");
 var querystring = require("querystring");
 
+var defaultDest = {
+    lon: "24.940303266001365",
+    lat: "60.16281419297092"
+};
+
 if ( !process.argv[2] || !process.argv[3] ) {
     throw "No auth provided";
     system.exit(1);
@@ -20,6 +25,7 @@ var hslClient = {
 http.createServer(function(request, response) {
     var index = request.url.indexOf("?") + 1;
     var queryParams = querystring.parse(request.url.substring(index));
+
     console.log(queryParams);
 
     // Serve the js file
@@ -34,8 +40,10 @@ http.createServer(function(request, response) {
             response.end();
         });
     } else if ( request.url.match('^/route') ) {
+        var destLon = queryParams.destLon ? queryParams.destLon : defaultDest.lon;
+        var destLat = queryParams.destLat ? queryParams.destLat : defaultDest.lat;
         // Fetches data from HSL api and return as json
-        hslClient.path = '/hsl/prod/?request=route&user=' + process.argv[2] + '&pass=' + process.argv[3] + '&show=1&epsg_in=4326&epsg_out=4326&from=' + queryParams.lon + ',' + queryParams.lat + '&to=24.940303266001365,60.16281419297092';
+        hslClient.path = '/hsl/prod/?request=route&user=' + process.argv[2] + '&pass=' + process.argv[3] + '&show=1&epsg_in=4326&epsg_out=4326&from=' + queryParams.lon + ',' + queryParams.lat + '&to=' + destLon +  ',' + destLat;
         var hslReq = http.request(hslClient, function(res) {
             console.log(hslClient.path);
             res.setEncoding("utf8");
