@@ -23,7 +23,7 @@ var Greitti = function() {
     // Set up the map
     var latlng = new google.maps.LatLng(60.1704686512, 24.9413144588);
     var myOptions = {
-        zoom: 14,
+        zoom: 12,
         center: latlng,
         mapTypeId: google.maps.MapTypeId.ROADMAP
     };
@@ -52,6 +52,7 @@ var Greitti = function() {
         1: "Bus",
         2: "Tram",
         5: "Bus",
+        7: "Boat",
         12: "Train",
         walk: "Walk"
     };

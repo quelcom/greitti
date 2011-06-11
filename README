@@ -14,3 +14,5 @@ coming from HTTP GET requests..) there is a nodejs component that hides the
 actual request from the client.
 
 Take this as a proof of concept only (and as an excuse to try nodejs).
+
+Run it as node server.js <username> <password>
