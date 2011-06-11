@@ -1,19 +1,19 @@
 // Run as "node greitt-server.js username password"
 
-var http = require('http');
-var sys = require("sys");
-var fs = require("fs");
-var querystring = require("querystring");
-
-var defaultDest = {
-    lon: "24.940303266001365",
-    lat: "60.16281419297092"
-};
+var http = require('http'),
+    sys = require("sys"),
+    fs = require("fs"),
+    querystring = require("querystring");
 
 if ( !process.argv[2] || !process.argv[3] ) {
     throw "No auth provided";
     system.exit(1);
 }
+
+var defaultDest = {
+    lon: "24.940303266001365",
+    lat: "60.16281419297092"
+};
 
 var hslClient = {
     host: 'api.reittiopas.fi',
@@ -30,7 +30,7 @@ http.createServer(function(request, response) {
 
     // Serve the js file
     if ( request.url == "/gr") {
-        fs.readFile("greitti.js", function(err,data) {
+        fs.readFile("js/greitti.js", function(err,data) {
             if ( err ) {
                 next (err);
                 return;
@@ -64,7 +64,7 @@ http.createServer(function(request, response) {
         hslReq.end();
     } else if ( request.url == "/" ) {
         // Serve the index page
-        fs.readFile("../index.html", function(err,data) {
+        fs.readFile("index.html", function(err,data) {
             if ( err ) {
                 next (err);
                 return;
@@ -79,6 +79,6 @@ http.createServer(function(request, response) {
             response.end();
     }
 
-}).listen(8080, "127.0.0.1");
+}).listen(8080);
 
-console.log("Server running at 127.0.0.1:8080");
+console.log("Server running at 8080");
